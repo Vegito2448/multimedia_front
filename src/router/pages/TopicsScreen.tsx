@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createTopic, deleteTopic, getTopics, updateTopic } from "../../api";
+import { searchByCollection } from "../../api/search";
 import { Modal, TopicForm } from "../../components";
 import { useForm } from '../../hooks/useForm';
 import { useReduxStore } from "../../store";
@@ -10,6 +11,8 @@ export const TopicsScreen: React.FC = () => {
   const [topics, setTopics] = useState<ITopic[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<ITopic[]>([]);
 
   const { values, errors, handleChange, resetForm, setFormData } = useForm<ITopic>({
     initialState: {
@@ -58,6 +61,14 @@ export const TopicsScreen: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const results = await searchByCollection('topic', searchTerm);
+    if (results) {
+      setSearchResults(results as ITopic[]);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">Topics</h1>
@@ -73,46 +84,103 @@ export const TopicsScreen: React.FC = () => {
           Create Topic
         </button>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {topics.map((topic) => (
-          <div key={topic?.id} className="p-4 bg-white rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-2">{topic?.name}</h2>
-            <div className="flex gap-2">
-              {topic?.permissions?.images && (
-                <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-blue-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
-                  <div className="mt-px">Images</div>
-                </div>
-              )}
-              {topic?.permissions?.videos && (
-                <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-red-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
-                  <div className="mt-px">Videos</div>
-                </div>
-              )}
-              {topic?.permissions?.texts && (
-                <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-green-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
-                  <div className="mt-px">Texts</div>
+      <div className="flex justify-center mb-8">
+        <form onSubmit={handleSearch} className="w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Search topics by name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border rounded-md"
+          />
+          <button type="submit" className="mt-2 w-full bg-blue-500 text-white px-4 py-2 rounded">
+            Search
+          </button>
+        </form>
+      </div>
+      {searchResults.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {searchResults.map((topic) => (
+            <div key={topic?.id} className="p-4 bg-white rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-2">{topic?.name}</h2>
+              <div className="flex gap-2">
+                {topic?.permissions?.images && (
+                  <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-blue-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                    <div className="mt-px">Images</div>
+                  </div>
+                )}
+                {topic?.permissions?.videos && (
+                  <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-red-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                    <div className="mt-px">Videos</div>
+                  </div>
+                )}
+                {topic?.permissions?.texts && (
+                  <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-green-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                    <div className="mt-px">Texts</div>
+                  </div>
+                )}
+              </div>
+              {auth?.user?.role === 'admin' && (
+                <div className="flex justify-end mt-4">
+                  <button
+                    className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
+                    onClick={() => handleEditTopic(topic)}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                    onClick={() => handleDeleteTopic(topic?.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               )}
             </div>
-            {auth?.user?.role === 'admin' && (
-              <div className="flex justify-end mt-4">
-                <button
-                  className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
-                  onClick={() => handleEditTopic(topic)}
-                >
-                  Update
-                </button>
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded"
-                  onClick={() => handleDeleteTopic(topic?.id)}
-                >
-                  Delete
-                </button>
+          ))}
+        </div>
+      ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {topics.map((topic) => (
+              <div key={topic?.id} className="p-4 bg-white rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-2">{topic?.name}</h2>
+                <div className="flex gap-2">
+                  {topic?.permissions?.images && (
+                    <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-blue-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                      <div className="mt-px">Images</div>
+                    </div>
+                  )}
+                  {topic?.permissions?.videos && (
+                    <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-red-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                      <div className="mt-px">Videos</div>
+                    </div>
+                  )}
+                  {topic?.permissions?.texts && (
+                    <div className="center relative inline-block select-none whitespace-nowrap rounded-lg bg-green-500 py-2 px-3.5 align-baseline font-sans text-xs font-bold uppercase leading-none text-white">
+                      <div className="mt-px">Texts</div>
+                    </div>
+                  )}
+                </div>
+                {auth?.user?.role === 'admin' && (
+                  <div className="flex justify-end mt-4">
+                    <button
+                      className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
+                      onClick={() => handleEditTopic(topic)}
+                    >
+                      Update
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded"
+                      onClick={() => handleDeleteTopic(topic?.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <TopicForm
@@ -131,5 +199,3 @@ export const TopicsScreen: React.FC = () => {
     </div>
   );
 };
-
-export default TopicsScreen;
