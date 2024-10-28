@@ -12,19 +12,19 @@ export const mainPath = import.meta.env.DEV ? "/" : "/multimedia_front/";
 
 export const allRoutes: RouteObject[] = [
   {
-    path: `${mainPath}auth/`,
+    path: `/auth/`,
     element: <PublicRoute children={<AuthLayout />} />,
     children: authRoutes
   },
   {
-    path: `${mainPath}`,
+    path: `/`,
     element: <PrivateRoute children={<MainLayout />} />,
     children: mainRoutes
   },
   {
     path: "*",
     element: <Navigate
-      to={`${mainPath}auth/login/`}
+      to={`/auth/login/`}
       replace
     />
 

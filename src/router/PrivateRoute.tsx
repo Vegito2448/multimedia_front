@@ -2,7 +2,6 @@ import { jwtDecode } from "jwt-decode";
 import { useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useReduxStore } from "../store";
-import { mainPath } from "./mainRouter";
 
 interface PrivateRouteProps {
   children: JSX.Element;
@@ -26,7 +25,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         dispatch({ type: 'logout' });
-        navigate(`${mainPath}auth/login`, { replace: true });
+        navigate(`/auth/login`, { replace: true });
       }
 
     }
@@ -35,7 +34,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
   useEffect(() => {
 
     if (!user || !token) {
-      navigate(`${mainPath}auth/login`, { replace: true });
+      navigate(`/auth/login`, { replace: true });
       dispatch({ type: 'logout' });
     }
 
@@ -43,7 +42,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
 
 
   return user?.id ? children : <Navigate
-    to={`${mainPath}auth/login`}
+    to={`/auth/login`}
     replace
   />;
 };
